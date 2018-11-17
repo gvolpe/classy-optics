@@ -2,7 +2,6 @@ package com.github.gvolpe
 
 import cats.effect._
 import cats.mtl._
-import cats.mtl.instances.all._
 import cats.syntax.all._
 import config._
 
@@ -12,7 +11,7 @@ object config {
   case class Port(value: Int) extends AnyVal
   case class HttpServerConfig(host: Host, port: Port)
 
-  case class PublicKeyConfig(value: String)
+  case class PublicKeyConfig(value: String) extends AnyVal
   case class ServiceConfig(publicKey: PublicKeyConfig)
 
   case class AppConfig(httpServer: HttpServerConfig, service: ServiceConfig)
