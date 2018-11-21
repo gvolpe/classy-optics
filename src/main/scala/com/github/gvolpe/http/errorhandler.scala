@@ -40,3 +40,15 @@ class UserHttpErrorHandler[F[_]: MonadError[?[_], UserError]] extends HttpErrorH
   override def handle(routes: HttpRoutes[F]): HttpRoutes[F] =
     RoutesHttpErrorHandler(routes)(handler)
 }
+
+class CatalogHttpErrorHandler[F[_]: MonadError[?[_], CatalogError]]
+    extends HttpErrorHandler[F, CatalogError]
+    with Http4sDsl[F] {
+  private val handler: CatalogError => F[Response[F]] = {
+    case ItemAlreadyExists(item) => Conflict(item.asJson)
+    case CatalogNotFound(id)     => NotFound(id.asJson)
+  }
+
+  override def handle(routes: HttpRoutes[F]): HttpRoutes[F] =
+    RoutesHttpErrorHandler(routes)(handler)
+}

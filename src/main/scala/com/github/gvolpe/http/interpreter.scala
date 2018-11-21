@@ -8,11 +8,11 @@ import cats.syntax.all._
 
 object interpreter {
 
-  def create[F[_]](implicit F: Sync[F]): F[UserAlg[F]] =
+  def mkUserAlg[F[_]: Sync](implicit error: ErrorChannel[F, UserError]): F[UserAlg[F, UserError]] =
     Ref.of[F, Map[String, User]](Map.empty).map { state =>
-      new UserAlg[F] {
+      new UserAlg[F, UserError] {
         private def validateAge(age: Int): F[Unit] =
-          if (age <= 0) F.raiseError(InvalidUserAge(age)) else F.unit
+          if (age <= 0) error.raise(InvalidUserAge(age)) else ().pure[F]
 
         override def find(username: String): F[Option[User]] =
           state.get.map(_.get(username))
@@ -21,7 +21,9 @@ object interpreter {
           validateAge(user.age) *>
             find(user.username).flatMap {
               case Some(_) =>
-                F.raiseError(UserAlreadyExists(user.username))
+                error.raise(UserAlreadyExists(user.username))
+//                error.raise(new Exception("asd")) // Does not compile
+//                Sync[F].raiseError(new Exception("")) // Should be considered an unrecoverable failure
               case None =>
                 state.update(_.updated(user.username, user))
             }
@@ -32,8 +34,27 @@ object interpreter {
               case Some(user) =>
                 state.update(_.updated(username, user.copy(age = age)))
               case None =>
-                F.raiseError(UserNotFound(username))
+                error.raise(UserNotFound(username))
             }
+      }
+    }
+
+  def mkCatalogAlg[F[_]: Sync](implicit error: ErrorChannel[F, CatalogError]): F[CatalogAlg[F, CatalogError]] =
+    Ref.of[F, Map[Long, List[Item]]](Map.empty).map { state =>
+      new CatalogAlg[F, CatalogError] {
+        override def find(id: Long): F[List[Item]] =
+          state.get.map(_.get(id).toList.flatten)
+
+        override def save(id: Long, item: Item): F[Unit] =
+          find(id).flatMap {
+            case _ :: _ =>
+              error.raise(ItemAlreadyExists(item.name))
+            // error.raise(new Exception("asd")) // Does not compile
+            // Sync[F].raiseError(new Exception("")) // Should be considered an unrecoverable failure
+            case Nil =>
+              state.update(st => st.updated(id, st.get(id).toList.flatten :+ item))
+          }
+
       }
     }
 

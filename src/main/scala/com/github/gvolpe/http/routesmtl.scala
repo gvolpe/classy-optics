@@ -12,8 +12,9 @@ import org.http4s.circe._
 import org.http4s.dsl.Http4sDsl
 
 class UserRoutesMTL[F[_]: Sync](
-    users: UserAlg[F]
-)(implicit H: HttpErrorHandler[F, UserError])
+    users: UserAlg[F, UserError],
+    catalog: CatalogAlg[F, CatalogError]
+)(implicit H1: HttpErrorHandler[F, UserError], H2: HttpErrorHandler[F, CatalogError])
     extends Http4sDsl[F] {
 
   private val httpRoutes: HttpRoutes[F] = HttpRoutes.of[F] {
@@ -35,6 +36,6 @@ class UserRoutesMTL[F[_]: Sync](
       }
   }
 
-  val routes: HttpRoutes[F] = H.handle(httpRoutes)
+  val routes: HttpRoutes[F] = H2.handle(H1.handle(httpRoutes))
 
 }
