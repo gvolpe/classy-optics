@@ -31,8 +31,8 @@ class HttpServer[F[_]: Sync](
     catalog: CatalogAlg[F, CatalogError]
 ) {
 
-  implicit val userErrorHandler    = new UserHttpErrorHandler[F]
-  implicit val catalogErrorHandler = new CatalogHttpErrorHandler[F]
+  implicit val userErrorHandler    = UserHttpErrorHandler[F]
+  implicit val catalogErrorHandler = CatalogHttpErrorHandler[F]
 
   val routes = new UserRoutesMTL[F](users, catalog).routes
 

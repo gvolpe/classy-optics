@@ -10,14 +10,17 @@ import org.http4s._
 import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.circe._
 import org.http4s.dsl.Http4sDsl
+import shapeless._
 
 class UserRoutesMTL[F[_]: Sync](
     users: UserAlg[F, UserError],
     catalog: CatalogAlg[F, CatalogError]
-)(implicit H1: HttpErrorHandler[F, UserError], H2: HttpErrorHandler[F, CatalogError])
-    extends Http4sDsl[F] {
+) extends Http4sDsl[F] {
 
   private val httpRoutes: HttpRoutes[F] = HttpRoutes.of[F] {
+
+    case GET -> Root / "catalogs" =>
+      Ok(catalog.find(23).map(_.asJson))
 
     case GET -> Root / "users" / username =>
       users.find(username).flatMap {
@@ -36,6 +39,7 @@ class UserRoutesMTL[F[_]: Sync](
       }
   }
 
-  val routes: HttpRoutes[F] = H2.handle(H1.handle(httpRoutes))
+  def routes(implicit H: CHttpErrorHandler[F, UserError :+: CatalogError :+: CNil]): HttpRoutes[F] =
+    H.handle(httpRoutes)
 
 }
