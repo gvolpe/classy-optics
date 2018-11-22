@@ -40,7 +40,7 @@ object HttpErrorHandler {
 /**
   * Typeclass for customer error handling operating over a co-product of error types.
   * */
-abstract class CHttpErrorHandler[F[_], Err <: Coproduct] {
+trait CHttpErrorHandler[F[_], Err <: Coproduct] {
   def handle(routes: HttpRoutes[F]): HttpRoutes[F]
 }
 
