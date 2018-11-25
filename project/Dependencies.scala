@@ -8,7 +8,7 @@ object Dependencies {
     val catsPar             = "0.2.0"
     val catsEffect          = "1.1.0-M1"
     val fs2                 = "1.0.0"
-    val http4s              = "0.20.0-M1"
+    val http4s              = "0.20.0-M3"
     val http4sTracer        = "1.0-RC2"
     val circe               = "0.10.0"
     val pureConfig          = "0.9.2"
