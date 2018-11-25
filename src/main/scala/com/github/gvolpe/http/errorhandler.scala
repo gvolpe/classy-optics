@@ -31,7 +31,7 @@ object RoutesHttpErrorHandler {
 object HttpErrorHandler {
   def apply[F[_], E <: Throwable](implicit ev: HttpErrorHandler[F, E]) = ev
 
-  def mkInstance[F[_]: MonadError[?[_], E], E <: Throwable](
+  def mkInstance[F[_]: ApplicativeError[?[_], E], E <: Throwable](
       handler: E => F[Response[F]]
   ): HttpErrorHandler[F, E] =
     (routes: HttpRoutes[F]) => RoutesHttpErrorHandler(routes)(handler)
@@ -40,20 +40,20 @@ object HttpErrorHandler {
 /**
   * Typeclass for customer error handling operating over a co-product of error types.
   * */
-trait CHttpErrorHandler[F[_], Err <: Coproduct] {
+trait CoHttpErrorHandler[F[_], Err <: Coproduct] {
   def handle(routes: HttpRoutes[F]): HttpRoutes[F]
 }
 
-object CHttpErrorHandler {
-  def apply[F[_], Err <: Coproduct](implicit ev: CHttpErrorHandler[F, Err]) = ev
+object CoHttpErrorHandler {
+  def apply[F[_], Err <: Coproduct](implicit ev: CoHttpErrorHandler[F, Err]) = ev
 
-  implicit def cNilInstance[F[_]]: CHttpErrorHandler[F, CNil] =
+  implicit def cNilInstance[F[_]]: CoHttpErrorHandler[F, CNil] =
     (routes: HttpRoutes[F]) => routes
 
   implicit def consInstance[F[_], E <: Throwable, T <: Coproduct](
       implicit H: HttpErrorHandler[F, E],
-      CH: CHttpErrorHandler[F, T]
-  ): CHttpErrorHandler[F, :+:[E, T]] =
+      CH: CoHttpErrorHandler[F, T]
+  ): CoHttpErrorHandler[F, E :+: T] =
     (routes: HttpRoutes[F]) => CH.handle(H.handle(routes))
 }
 

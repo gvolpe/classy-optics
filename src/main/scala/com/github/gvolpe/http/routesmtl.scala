@@ -39,7 +39,7 @@ class UserRoutesMTL[F[_]: Sync](
       }
   }
 
-  def routes(implicit H: CHttpErrorHandler[F, UserError :+: CatalogError :+: CNil]): HttpRoutes[F] =
+  def routes(implicit H: CoHttpErrorHandler[F, UserError :+: CatalogError :+: CNil]): HttpRoutes[F] =
     H.handle(httpRoutes)
 
 }

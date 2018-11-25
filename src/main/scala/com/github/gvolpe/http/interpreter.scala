@@ -5,6 +5,7 @@ import domain._
 import cats.effect.Sync
 import cats.effect.concurrent.Ref
 import cats.syntax.all._
+import ErrorChannel.syntax._
 
 object interpreter {
 
@@ -39,7 +40,7 @@ object interpreter {
       }
     }
 
-  def mkCatalogAlg[F[_]: Sync](implicit error: ErrorChannel[F, CatalogError]): F[CatalogAlg[F, CatalogError]] =
+  def mkCatalogAlg[F[_]: ErrorChannel[?[_], CatalogError]: Sync]: F[CatalogAlg[F, CatalogError]] =
     Ref.of[F, Map[Long, List[Item]]](Map.empty).map { state =>
       new CatalogAlg[F, CatalogError] {
         override def find(id: Long): F[List[Item]] =
@@ -48,7 +49,7 @@ object interpreter {
         override def save(id: Long, item: Item): F[Unit] =
           find(id).flatMap {
             case _ :: _ =>
-              error.raise(ItemAlreadyExists(item.name))
+              ItemAlreadyExists(item.name).raise
             // error.raise(new Exception("asd")) // Does not compile
             // Sync[F].raiseError(new Exception("")) // Should be considered an unrecoverable failure
             case Nil =>

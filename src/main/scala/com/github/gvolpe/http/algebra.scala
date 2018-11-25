@@ -16,6 +16,12 @@ object algebra {
       new ErrorChannel[F, E] {
         override def raise[A](e: E) = F.raiseError(e)
       }
+
+    object syntax {
+      implicit class ErrorChannelOps[F[_]: ErrorChannel[?[_], E], E <: Throwable](e: E) {
+        def raise[A]: F[A] = ErrorChannel[F, E].raise[A](e)
+      }
+    }
   }
 
   abstract class UserAlg[F[_]: ErrorChannel[?[_], E], E <: Throwable] {
