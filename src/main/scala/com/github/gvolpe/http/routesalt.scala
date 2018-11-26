@@ -10,7 +10,7 @@ import org.http4s._
 import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.circe._
 
-abstract class UserRoutes[F[_]: HttpErrorHandler[?[_], E]: Sync, E <: Throwable](
+abstract class UserRoutes[F[_]: HttpErrorHandler[?[_], E], E <: Throwable](
     users: UserAlg[F, E]
 ) extends Routes[F, E]
 

@@ -13,7 +13,7 @@ import org.http4s.circe._
 import shapeless._
 
 abstract class CoUserRoutes[
-    F[_]: CoHttpErrorHandler[?[_], E]: Sync,
+    F[_]: CoHttpErrorHandler[?[_], E],
     A <: Throwable,
     B <: Throwable,
     E <: Coproduct: =:=[?, A :+: B :+: CNil]
