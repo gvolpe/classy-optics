@@ -34,7 +34,7 @@ class HttpServer[F[_]: Sync](
   implicit val userErrorHandler    = UserHttpErrorHandler[F]
   implicit val catalogErrorHandler = CatalogHttpErrorHandler[F]
 
-  val routes = new UserRoutesMTL[F](users, catalog).routes
+  val routes = new CoUserRoutesMTL[F](users, catalog).routes
 
   val httpApp: HttpApp[F] = routes.orNotFound
 
