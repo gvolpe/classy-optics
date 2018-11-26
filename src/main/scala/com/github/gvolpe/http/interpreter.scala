@@ -1,11 +1,11 @@
 package com.github.gvolpe.http
 
-import algebra._
-import domain._
 import cats.effect.Sync
 import cats.effect.concurrent.Ref
 import cats.syntax.all._
-import ErrorChannel.syntax._
+import com.github.gvolpe.http.algebra.ErrorChannel.syntax._
+import com.github.gvolpe.http.algebra._
+import com.github.gvolpe.http.domain._
 
 object interpreter {
 
