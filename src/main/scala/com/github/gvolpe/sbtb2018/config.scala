@@ -1,4 +1,4 @@
-package com.github.gvolpe
+package com.github.gvolpe.sbtb2018
 
 import cats.effect._
 import cats.mtl._

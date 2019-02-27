@@ -1,4 +1,4 @@
-package com.github.gvolpe.http
+package com.github.gvolpe.sbtb2018.http
 
 import algebra._
 import domain._
