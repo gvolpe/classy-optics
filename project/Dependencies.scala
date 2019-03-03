@@ -13,6 +13,7 @@ object Dependencies {
     val circe               = "0.10.0"
     val pureConfig          = "0.9.2"
     val log4cats            = "0.2.0-RC2"
+    val zio                 = "0.9"
 
     val betterMonadicFor    = "0.3.0-M2"
     val kindProjector       = "0.9.7"
@@ -25,12 +26,16 @@ object Dependencies {
   object Libraries {
     def circe(artifact: String): ModuleID = "io.circe"    %% artifact % Versions.circe
     def http4s(artifact: String): ModuleID = "org.http4s" %% artifact % Versions.http4s
+    def zio(artifact: String): ModuleID = "org.scalaz"    %% artifact % Versions.zio
 
     lazy val cats                = "org.typelevel"         %% "cats-core"                  % Versions.cats
     lazy val catsMeowMtl         = "com.olegpy"            %% "meow-mtl"                   % Versions.catsMeowMtl
     lazy val catsPar             = "io.chrisdavenport"     %% "cats-par"                   % Versions.catsPar
     lazy val catsEffect          = "org.typelevel"         %% "cats-effect"                % Versions.catsEffect
     lazy val fs2                 = "co.fs2"                %% "fs2-core"                   % Versions.fs2
+
+    lazy val zioCore             = zio("scalaz-zio")
+    lazy val zioCats             = zio("scalaz-zio-interop-cats")
 
     lazy val http4sDsl           = http4s("http4s-dsl")
     lazy val http4sServer        = http4s("http4s-blaze-server")

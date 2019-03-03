@@ -58,6 +58,8 @@ lazy val classy = (project in file(".")).settings(
     Libraries.pureConfig,
     Libraries.log4cats,
     Libraries.logback,
+    Libraries.zioCore,
+    Libraries.zioCats,
     Libraries.scalaTest      % "test",
     Libraries.scalaCheck     % "test",
     Libraries.catsEffectLaws % "test"
