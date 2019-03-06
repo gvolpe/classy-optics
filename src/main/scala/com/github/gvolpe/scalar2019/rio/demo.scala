@@ -1,4 +1,4 @@
-package com.github.gvolpe.rio
+package com.github.gvolpe.scalar2019.rio
 
 import cats.effect.Sync
 import cats.syntax.all._

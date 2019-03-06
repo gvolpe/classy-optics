@@ -1,4 +1,4 @@
-package com.github.gvolpe
+package com.github.gvolpe.scalar2019
 
 import scalaz.zio._
 
