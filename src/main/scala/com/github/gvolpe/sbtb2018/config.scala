@@ -4,6 +4,7 @@ import cats.effect._
 import cats.mtl._
 import cats.syntax.all._
 import config._
+import pureconfig.generic.auto._
 
 object config {
 
