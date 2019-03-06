@@ -12,8 +12,8 @@ private[rio] trait CatzMtlInstances {
 
   implicit def zioApplicativeAsk[R, E](implicit ev: Applicative[ZIO[R, E, ?]]): ApplicativeAsk[ZIO[R, E, ?], R] =
     new DefaultApplicativeAsk[ZIO[R, E, ?], R] {
-      override val applicative: Applicative[ZIO[R, E, ?]] = ev
-      override def ask: ZIO[R, Nothing, R]                = ZIO.environment
+      val applicative: Applicative[ZIO[R, E, ?]] = ev
+      def ask: ZIO[R, Nothing, R]                = ZIO.environment
     }
 
 }
