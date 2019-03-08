@@ -1,4 +1,4 @@
-package com.github.gvolpe.scalar2019
+package com.github.gvolpe.scalar2019.tagless
 
 import cats._
 import cats.effect._
@@ -18,52 +18,61 @@ object module {
 
   def ask[F[_], T](implicit ev: ApplicativeAsk[F, T]) = ev.ask
 
+  case class Rewritable[F[_]] private (
+      userDb: Option[UserDatabase[F]] = None,
+      profileDb: Option[ProfileDatabase[F]] = None
+  )
+
+  object Rewritable {
+    def empty[F[_]]: Rewritable[F] = new Rewritable[F]()
+  }
+
+  object Graph {
+    def make[F[_]: Sync](deps: Rewritable[F] = Rewritable.empty[F]): F[Graph[F]] =
+      new Graph[F](deps).pure[F] // This is normally an effectful operation
+  }
+
+  class Graph[F[_]: Sync](deps: Rewritable[F]) {
+    def putStrLn[A](a: A): F[Unit] = Sync[F].delay(println(a))
+
+    val userDb: UserDatabase[F] = new UserDatabase[F] {
+      def persist: F[Unit] = putStrLn("User db persist")
+    }
+
+    val profileDb: ProfileDatabase[F] = new ProfileDatabase[F] {
+      def persist: F[Unit] = putStrLn("Profile db persist")
+    }
+
+    val cache: Cache[F] = new Cache[F] {
+      def get: F[String] = "Cache data".pure[F]
+    }
+
+    val dbModule: DatabaseModule[F] =
+      DatabaseModule[F](deps.userDb.getOrElse(userDb), deps.profileDb.getOrElse(profileDb), cache)
+
+    val one: ServiceOne[F] = new ServiceOne[F] {
+      def get: F[String] = "Service #1".pure[F]
+    }
+
+    val two: ServiceTwo[F] = new ServiceTwo[F] {
+      def get: F[String] = "Service #2".pure[F]
+    }
+
+    val serviceModule: ServiceModule[F] = ServiceModule[F](one, two)
+
+    val appModule: AppModule[F] = AppModule[F](serviceModule, dbModule)
+  }
+
   object instances {
-    def moduleReader(module: AppModule[IO]): HasAppModule[IO] =
-      new DefaultApplicativeAsk[IO, AppModule[IO]] {
-        override val applicative: Applicative[IO] = implicitly
-        override def ask: IO[AppModule[IO]]       = IO.pure(module)
+    def moduleReader[F[_]: Applicative](module: AppModule[F]): HasAppModule[F] =
+      new DefaultApplicativeAsk[F, AppModule[F]] {
+        override val applicative: Applicative[F] = implicitly
+        override def ask: F[AppModule[F]]        = module.pure[F]
       }
-
-    val userDb: UserDatabase[IO] = new UserDatabase[IO] {
-      def persist: IO[Unit] = IO(println("User db persist"))
-    }
-
-    val profileDb: ProfileDatabase[IO] = new ProfileDatabase[IO] {
-      def persist: IO[Unit] = IO(println("Profile db persist"))
-    }
-
-    val cache: Cache[IO] = new Cache[IO] {
-      def get: IO[String] = IO.pure("Cache data")
-    }
-
-    val dbModule: DatabaseModule[IO] = DatabaseModule[IO](userDb, profileDb, cache)
-
-    val one: ServiceOne[IO] = new ServiceOne[IO] {
-      def get: IO[String] = IO.pure("Service #1")
-    }
-
-    val two: ServiceTwo[IO] = new ServiceTwo[IO] {
-      def get: IO[String] = IO.pure("Service #2")
-    }
-
-    val serviceModule: ServiceModule[IO] = ServiceModule[IO](one, two)
-
-    val appModule: AppModule[IO] = AppModule[IO](serviceModule, dbModule)
   }
 }
 
 import module._
-
-object tagless extends IOApp {
-  import module.instances._
-
-  implicit val appModuleReader: HasAppModule[IO] = moduleReader(appModule)
-
-  def run(args: List[String]): IO[ExitCode] =
-    Program[IO].as(ExitCode.Success)
-
-}
 
 case class AppModule[F[_]](
     serviceModule: ServiceModule[F],
@@ -102,7 +111,7 @@ trait ServiceTwo[F[_]] {
 }
 
 object Program {
-  def apply[F[_]: HasAppModule: Sync]: F[Unit] =
+  def run[F[_]: HasAppModule: Sync]: F[Unit] =
     for {
       m1 <- new ProgramOne[F].get
       m2 <- new ProgramTwo[F].get

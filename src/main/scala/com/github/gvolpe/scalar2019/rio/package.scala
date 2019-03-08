@@ -1,7 +1,7 @@
 package com.github.gvolpe.scalar2019
 
-import scalaz.zio._
+import scalaz.zio.ZIO
 
 package object rio {
-  type RIO[-R, +A] = TaskR[R, A]
+  type RIO[-R, +A] = ZIO[R, Throwable, A]
 }
