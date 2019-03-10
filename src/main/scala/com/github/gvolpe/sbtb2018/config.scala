@@ -17,6 +17,10 @@ object config {
 
   case class AppConfig(httpServer: HttpServerConfig, service: ServiceConfig)
 
+  def ask[F[_], A](implicit ev: ApplicativeAsk[F, A]): F[A] = ev.ask
+
+  def putStrLn[F[_]: Sync, A](a: A): F[Unit] = Sync[F].delay(println(a))
+
   def loadConfig[F[_]: Sync]: F[AppConfig] =
     Sync[F].delay(pureconfig.loadConfigOrThrow[AppConfig])
 
@@ -29,26 +33,20 @@ object config {
 class ProgramOne[F[_]: HasAppConfig: Sync] {
 
   def foo: F[Unit] =
-    ApplicativeAsk[F, AppConfig].ask.flatMap { config =>
-      Sync[F].delay(println(config))
-    }
+    ask[F, AppConfig].flatMap(putStrLn(_))
 
 }
 
 class ProgramTwo[F[_]: HasHttpServerConfig: Sync] {
 
   def foo: F[Unit] =
-    ApplicativeAsk[F, HttpServerConfig].ask.flatMap { config =>
-      Sync[F].delay(println(config))
-    }
+    ask[F, HttpServerConfig].flatMap(putStrLn(_))
 
 }
 
 class ProgramThree[F[_]: HasServiceConfig: Sync] {
 
   def foo: F[Unit] =
-    ApplicativeAsk[F, ServiceConfig].ask.flatMap { config =>
-      Sync[F].delay(println(config))
-    }
+    ask[F, ServiceConfig].flatMap(putStrLn(_))
 
 }

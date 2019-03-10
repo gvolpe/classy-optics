@@ -24,7 +24,7 @@ object module {
   type HasDbModule[F[_]]      = ApplicativeAsk[F, DatabaseModule[F]]
   type HasAppModule[F[_]]     = ApplicativeAsk[F, AppModule[F]]
 
-  def ask[F[_], T](implicit ev: ApplicativeAsk[F, T]) = ev.ask
+  def ask[F[_], T[_[_]]](implicit ev: ApplicativeAsk[F, T[F]]) = ev.ask
 
   case class Rewritable[F[_]] private (
       userDb: Option[UserDatabase[F]] = None,
@@ -71,13 +71,6 @@ object module {
     val appModule: AppModule[F] = AppModule[F](serviceModule, dbModule)
   }
 
-  object instances {
-    def moduleReader[F[_]: Applicative](module: AppModule[F]): HasAppModule[F] =
-      new DefaultApplicativeAsk[F, AppModule[F]] {
-        override val applicative: Applicative[F] = implicitly
-        override def ask: F[AppModule[F]]        = module.pure[F]
-      }
-  }
 }
 
 import module._
@@ -134,22 +127,22 @@ object Program {
 
 class ProgramOne[F[_]: HasServiceOne: Monad] {
   def get: F[String] =
-    ask[F, ServiceOne[F]].flatMap(_.get)
+    ask[F, ServiceOne].flatMap(_.get)
 }
 
 class ProgramTwo[F[_]: HasCache: HasServiceTwo: Monad] {
   def get: F[String] = {
-    val fx = ask[F, ServiceTwo[F]].flatMap(_.get)
-    val fy = ask[F, Cache[F]].flatMap(_.get)
+    val fx = ask[F, ServiceTwo].flatMap(_.get)
+    val fy = ask[F, Cache].flatMap(_.get)
     (fx, fy).mapN { case (x, y) => x |+| " - " |+| y }
   }
 }
 
 class ProgramThree[F[_]: HasUserDb: HasServiceOne: HasServiceTwo: Monad] {
   def get: F[String] = {
-    val fx = ask[F, ServiceOne[F]].flatMap(_.get)
-    val fy = ask[F, ServiceTwo[F]].flatMap(_.get)
-    val fz = ask[F, UserDatabase[F]].flatMap(_.persist)
+    val fx = ask[F, ServiceOne].flatMap(_.get)
+    val fy = ask[F, ServiceTwo].flatMap(_.get)
+    val fz = ask[F, UserDatabase].flatMap(_.persist)
     (fx, fy, fz).mapN { case (x, y, _) => x |+| " - " |+| y }
   }
 }

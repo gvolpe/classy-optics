@@ -1,9 +1,10 @@
 package com.github.gvolpe.scalar2019.tagless
 
+import cats._
 import cats.effect._
 import cats.implicits._
+import cats.mtl._
 import module._
-import module.instances._
 
 /*
  * Exploring the option of using the IO Monad instance of ApplicativeAsk to build
@@ -13,6 +14,13 @@ import module.instances._
  * baked-in is indeed a hack but if you can live with it the benefits are great.
  * */
 object catsapp extends IOApp {
+
+  // Hacky instance
+  def moduleReader[F[_]: Applicative](module: AppModule[F]): HasAppModule[F] =
+    new DefaultApplicativeAsk[F, AppModule[F]] {
+      override val applicative: Applicative[F] = implicitly
+      override def ask: F[AppModule[F]]        = module.pure[F]
+    }
 
   def run(args: List[String]): IO[ExitCode] =
     Graph
