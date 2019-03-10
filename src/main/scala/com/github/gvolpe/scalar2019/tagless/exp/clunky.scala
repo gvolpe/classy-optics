@@ -1,6 +1,6 @@
 package com.github.gvolpe.scalar2019.tagless.exp
 
-import cats.syntax.all._
+import com.github.gvolpe.scalar2019.rio._
 import com.olegpy.meow.hierarchy._
 import cumbersome._
 import scalaz.zio._
@@ -10,12 +10,12 @@ object clunky extends App {
   import com.github.gvolpe.scalar2019.rio.instances.mtl._
 
   // Natural transformation (~>) replaces `provide` in polymorphic code
-  implicit val zfk = fk(new Graph[Task].appModule)
+  implicit val fk = RIO.functionK(new Graph[Task].appModule)
 
   def run(args: List[String]): UIO[Int] =
     Program
       .run[TaskR[AppModule[Task], ?], Task]
-      .as(0)
-      .orDie
+      .either
+      .map(_.fold(_ => 1, _ => 0))
 
 }

@@ -16,7 +16,7 @@ import module._
 object catsapp extends IOApp {
 
   // Hacky instance
-  def moduleReader[F[_]: Applicative](module: AppModule[F]): HasAppModule[F] =
+  def mkModuleReader[F[_]: Applicative](module: AppModule[F]): HasAppModule[F] =
     new DefaultApplicativeAsk[F, AppModule[F]] {
       override val applicative: Applicative[F] = implicitly
       override def ask: F[AppModule[F]]        = module.pure[F]
@@ -25,7 +25,7 @@ object catsapp extends IOApp {
   def run(args: List[String]): IO[ExitCode] =
     Graph
       .make[IO]()
-      .map(g => moduleReader(g.appModule))
+      .map(g => mkModuleReader(g.appModule))
       .flatMap { implicit m: HasAppModule[IO] =>
         Program.run[IO].as(ExitCode.Success)
       }

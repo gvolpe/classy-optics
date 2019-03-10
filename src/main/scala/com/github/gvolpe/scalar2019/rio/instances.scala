@@ -20,8 +20,6 @@ private[rio] trait CatzMtlInstances {
 
 private[rio] trait DeriveMtlInstances {
 
-  def fk[R](r: R): TaskR[R, ?] ~> Task = λ[TaskR[R, ?] ~> Task](_.provide(r))
-
   implicit def deriveApplicativeAsk[F[_], G[_]: Applicative, A](
       implicit f: F ~> G,
       ev: ApplicativeAsk[F, A]
