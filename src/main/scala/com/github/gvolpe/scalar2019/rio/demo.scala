@@ -17,7 +17,6 @@ object demo extends App {
       .flatMap { config =>
         new RIOMain[RIO[AppConfig, ?]].foo.provide(config)
       }
-      .provide(Environment)
       .as(0)
       .orDie
 

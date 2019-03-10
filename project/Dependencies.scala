@@ -13,7 +13,7 @@ object Dependencies {
     val circe               = "0.10.0"
     val pureConfig          = "0.10.2"
     val log4cats            = "0.3.0"
-    val zio                 = "0.9+6-bcc5b962+20190306-0858-SNAPSHOT"
+    val zio                 = "0.11"
 
     val betterMonadicFor    = "0.3.0-M4"
     val kindProjector       = "0.9.8"

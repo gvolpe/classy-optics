@@ -6,6 +6,14 @@ import cats.implicits._
 import cats.mtl._
 import com.olegpy.meow.hierarchy._
 
+/*
+ * These should use two different type constructors `F` and `G`. The first one
+ * to represent the reader effect and the second one for the runnable effect.
+ *
+ * But as demonstrated in the `exp` package this makes the entire application
+ * very cumbersome so we use a single one to represent both while acknowledging
+ * the trade-offs.
+ */
 object module {
   type HasServiceOne[F[_]]    = ApplicativeAsk[F, ServiceOne[F]]
   type HasServiceTwo[F[_]]    = ApplicativeAsk[F, ServiceTwo[F]]
