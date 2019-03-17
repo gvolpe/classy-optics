@@ -11,13 +11,9 @@ import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.circe._
 import org.http4s.dsl.Http4sDsl
 
-class UserRoutesMTL[F[_]: Sync](
-    users: UserAlg[F]
-)(implicit H: HttpErrorHandler[F, UserError])
-    extends Http4sDsl[F] {
+case class UserRoutesMTL[F[_]: Sync](users: UserAlg[F]) extends Http4sDsl[F] {
 
   private val httpRoutes: HttpRoutes[F] = HttpRoutes.of[F] {
-
     case GET -> Root / "users" / username =>
       users.find(username).flatMap {
         case Some(user) => Ok(user.asJson)
@@ -35,6 +31,7 @@ class UserRoutesMTL[F[_]: Sync](
       }
   }
 
-  val routes: HttpRoutes[F] = H.handle(httpRoutes)
+  def routes(implicit H: HttpErrorHandler[F, UserError]): HttpRoutes[F] =
+    H.handle(httpRoutes)
 
 }

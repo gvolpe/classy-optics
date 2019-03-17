@@ -11,7 +11,7 @@ import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.circe._
 import org.http4s.dsl.Http4sDsl
 
-class UserRoutesAlt[F[_]: Sync](users: UserAlg[F]) extends Http4sDsl[F] {
+case class UserRoutesAlt[F[_]: Sync](users: UserAlg[F]) extends Http4sDsl[F] {
 
   val routes: HttpRoutes[F] = HttpRoutes.of[F] {
 

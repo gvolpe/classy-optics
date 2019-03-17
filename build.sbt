@@ -23,7 +23,9 @@ lazy val commonScalacOptions = Seq(
   "20",
   "-Ydelambdafy:method",
   "-Xmax-classfile-name",
-  "100"
+  "100",
+  "-opt:l:inline",
+  "-opt-inline-from:**"
 )
 
 lazy val classy = (project in file(".")).settings(
