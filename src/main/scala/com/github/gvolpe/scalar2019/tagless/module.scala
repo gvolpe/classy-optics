@@ -112,37 +112,44 @@ trait ServiceTwo[F[_]] {
 }
 
 object Program {
+  def putStrLn[F[_]: Sync, A](a: A): F[Unit] = Sync[F].delay(println(a))
+
   def run[F[_]: HasAppModule: Sync]: F[Unit] =
     for {
-      m1 <- new ProgramOne[F].get
-      m2 <- new ProgramTwo[F].get
-      m3 <- new ProgramThree[F].get
-      _ <- Sync[F].delay {
-            println(s"M1: $m1")
-            println(s"M2: $m2")
-            println(s"M3: $m3")
-          }
+      p1 <- LiveProgramOne[F]
+      p2 <- LiveProgramTwo[F]
+      p3 <- LiveProgramThree[F]
+      _ <- p1.get.flatMap(x => putStrLn(s"P1: $x"))
+      _ <- p2.get.flatMap(x => putStrLn(s"P2: $x"))
+      _ <- p3.get.flatMap(x => putStrLn(s"P3: $x"))
     } yield ()
 }
 
-class ProgramOne[F[_]: HasServiceOne: Monad] {
+object LiveProgramOne {
+  def apply[F[_]: HasServiceOne: Monad]: F[ProgramOne[F]] =
+    ask[F, ServiceOne].map(ProgramOne[F])
+}
+
+case class ProgramOne[F[_]: Monad](s1: ServiceOne[F]) {
+  def get: F[String] = s1.get
+}
+
+object LiveProgramTwo {
+  def apply[F[_]: HasCache: HasServiceTwo: Monad]: F[ProgramTwo[F]] =
+    (ask[F, Cache], ask[F, ServiceTwo]).mapN(ProgramTwo[F])
+}
+
+case class ProgramTwo[F[_]: Monad](cache: Cache[F], s2: ServiceTwo[F]) {
   def get: F[String] =
-    ask[F, ServiceOne].flatMap(_.get)
+    (cache.get, s2.get).mapN { case (x, y) => x |+| " - " |+| y }
 }
 
-class ProgramTwo[F[_]: HasCache: HasServiceTwo: Monad] {
-  def get: F[String] = {
-    val fx = ask[F, ServiceTwo].flatMap(_.get)
-    val fy = ask[F, Cache].flatMap(_.get)
-    (fx, fy).mapN { case (x, y) => x |+| " - " |+| y }
-  }
+object LiveProgramThree {
+  def apply[F[_]: HasServiceOne: HasServiceTwo: HasUserDb: Monad]: F[ProgramThree[F]] =
+    (ask[F, ServiceOne], ask[F, ServiceTwo], ask[F, UserDatabase]).mapN(ProgramThree[F])
 }
 
-class ProgramThree[F[_]: HasUserDb: HasServiceOne: HasServiceTwo: Monad] {
-  def get: F[String] = {
-    val fx = ask[F, ServiceOne].flatMap(_.get)
-    val fy = ask[F, ServiceTwo].flatMap(_.get)
-    val fz = ask[F, UserDatabase].flatMap(_.persist)
-    (fx, fy, fz).mapN { case (x, y, _) => x |+| " - " |+| y }
-  }
+case class ProgramThree[F[_]: Monad](s1: ServiceOne[F], s2: ServiceTwo[F], db: UserDatabase[F]) {
+  def get: F[String] =
+    (s1.get, s2.get, db.persist).mapN { case (x, y, _) => x |+| " - " |+| y }
 }
