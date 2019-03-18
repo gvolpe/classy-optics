@@ -26,6 +26,8 @@ object module {
 
   def ask[F[_], T[_[_]]](implicit ev: ApplicativeAsk[F, T[F]]) = ev.ask
 
+  def putStrLn[F[_]: Sync, A](a: A): F[Unit] = Sync[F].delay(println(a))
+
   case class Rewritable[F[_]] private (
       userDb: Option[UserDatabase[F]] = None,
       profileDb: Option[ProfileDatabase[F]] = None
@@ -41,22 +43,24 @@ object module {
   }
 
   class Graph[F[_]: Sync](deps: Rewritable[F]) {
-    def putStrLn[A](a: A): F[Unit] = Sync[F].delay(println(a))
+    val userDb: UserDatabase[F] = deps.userDb.getOrElse(
+      new UserDatabase[F] {
+        def persist: F[Unit] = putStrLn("User db persist")
+      }
+    )
 
-    val userDb: UserDatabase[F] = new UserDatabase[F] {
-      def persist: F[Unit] = putStrLn("User db persist")
-    }
-
-    val profileDb: ProfileDatabase[F] = new ProfileDatabase[F] {
-      def persist: F[Unit] = putStrLn("Profile db persist")
-    }
+    val profileDb: ProfileDatabase[F] = deps.profileDb.getOrElse(
+      new ProfileDatabase[F] {
+        def persist: F[Unit] = putStrLn("Profile db persist")
+      }
+    )
 
     val cache: Cache[F] = new Cache[F] {
       def get: F[String] = "Cache data".pure[F]
     }
 
     val dbModule: DatabaseModule[F] =
-      DatabaseModule[F](deps.userDb.getOrElse(userDb), deps.profileDb.getOrElse(profileDb), cache)
+      DatabaseModule[F](userDb, profileDb, cache)
 
     val one: ServiceOne[F] = new ServiceOne[F] {
       def get: F[String] = "Service #1".pure[F]
@@ -112,17 +116,13 @@ trait ServiceTwo[F[_]] {
 }
 
 object Program {
-  def putStrLn[F[_]: Sync, A](a: A): F[Unit] = Sync[F].delay(println(a))
-
   def run[F[_]: HasAppModule: Sync]: F[Unit] =
-    for {
-      p1 <- LiveProgramOne[F]
-      p2 <- LiveProgramTwo[F]
-      p3 <- LiveProgramThree[F]
-      _ <- p1.get.flatMap(x => putStrLn(s"P1: $x"))
-      _ <- p2.get.flatMap(x => putStrLn(s"P2: $x"))
-      _ <- p3.get.flatMap(x => putStrLn(s"P3: $x"))
-    } yield ()
+    (LiveProgramOne[F], LiveProgramTwo[F], LiveProgramThree[F]).mapN {
+      case (p1, p2, p3) =>
+        p1.get.flatMap(x => putStrLn(s"P1: $x")) *>
+          p2.get.flatMap(x => putStrLn(s"P2: $x")) *>
+          p3.get.flatMap(x => putStrLn(s"P3: $x"))
+    }.flatten
 }
 
 object LiveProgramOne {
@@ -139,7 +139,10 @@ object LiveProgramTwo {
     (ask[F, Cache], ask[F, ServiceTwo]).mapN(ProgramTwo[F])
 }
 
-case class ProgramTwo[F[_]: Monad](cache: Cache[F], s2: ServiceTwo[F]) {
+case class ProgramTwo[F[_]: Monad](
+    cache: Cache[F],
+    s2: ServiceTwo[F]
+) {
   def get: F[String] =
     (cache.get, s2.get).mapN { case (x, y) => x |+| " - " |+| y }
 }
@@ -149,7 +152,11 @@ object LiveProgramThree {
     (ask[F, ServiceOne], ask[F, ServiceTwo], ask[F, UserDatabase]).mapN(ProgramThree[F])
 }
 
-case class ProgramThree[F[_]: Monad](s1: ServiceOne[F], s2: ServiceTwo[F], db: UserDatabase[F]) {
+case class ProgramThree[F[_]: Monad](
+    s1: ServiceOne[F],
+    s2: ServiceTwo[F],
+    db: UserDatabase[F]
+) {
   def get: F[String] =
     (s1.get, s2.get, db.persist).mapN { case (x, y, _) => x |+| " - " |+| y }
 }
