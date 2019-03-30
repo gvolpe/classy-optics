@@ -6,6 +6,7 @@ import com.olegpy.meow.hierarchy._
 import module._
 import scalaz.zio._
 import scalaz.zio.interop.catz._
+import scalaz.zio.interop.catz.mtl._
 
 /*
  * Exploring the option of using the RIO Monad instance of ApplicativeAsk to build
@@ -25,7 +26,7 @@ import scalaz.zio.interop.catz._
  * direct use of `Task` to construct our program.
  * */
 object rioapp extends App {
-  import com.github.gvolpe.scalar2019.rio.instances.mtl._
+  import instances.mtl._
 
   // Natural transformation (~>) replaces `provide` in polymorphic code
   def run(args: List[String]): UIO[Int] =

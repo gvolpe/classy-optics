@@ -5,12 +5,11 @@ import cats.syntax.all._
 import com.github.gvolpe.sbtb2018.config._
 import com.github.gvolpe.sbtb2018._
 import com.olegpy.meow.hierarchy._
-
 import scalaz.zio._
 import scalaz.zio.interop.catz._
+import scalaz.zio.interop.catz.mtl._
 
 object demo extends App {
-  import instances.mtl._
 
   override def run(args: List[String]): UIO[Int] =
     loadConfig[Task]
