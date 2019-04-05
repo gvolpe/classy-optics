@@ -14,7 +14,7 @@ object server extends IOApp {
     interpreter.create[IO].flatMap { users =>
       BlazeServerBuilder[IO]
         .bindHttp(8080, "0.0.0.0")
-        .withHttpApp(new HttpServer[IO](users).httpApp)
+        .withHttpApp(HttpServer[IO](users).httpApp)
         .serve
         .compile
         .drain
@@ -23,11 +23,9 @@ object server extends IOApp {
 
 }
 
-class HttpServer[F[_]: Sync](users: UserAlg[F]) {
+case class HttpServer[F[_]: Sync](users: UserAlg[F]) {
 
-  implicit val errorHandler = new UserHttpErrorHandler[F]
-
-  val routes = new UserRoutesMTL[F](users).routes
+  val routes = UserRoutesMTL[F](users).routes(UserHttpErrorHandler[F])
 
   val httpApp: HttpApp[F] = routes.orNotFound
 

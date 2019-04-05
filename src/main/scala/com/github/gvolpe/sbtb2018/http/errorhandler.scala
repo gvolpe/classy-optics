@@ -3,7 +3,6 @@ package com.github.gvolpe.sbtb2018.http
 import domain._
 import cats.{ ApplicativeError, MonadError }
 import cats.data.{ Kleisli, OptionT }
-import cats.syntax.all._
 import io.circe.syntax._
 import org.http4s._
 import org.http4s.circe._
@@ -13,30 +12,32 @@ trait HttpErrorHandler[F[_], E <: Throwable] {
   def handle(routes: HttpRoutes[F]): HttpRoutes[F]
 }
 
-object RoutesHttpErrorHandler {
-  def apply[F[_]: ApplicativeError[?[_], E], E <: Throwable](
-      routes: HttpRoutes[F]
-  )(handler: E => F[Response[F]]): HttpRoutes[F] =
+abstract class RoutesHttpErrorHandler[F[_], E <: Throwable] extends HttpErrorHandler[F, E] with Http4sDsl[F] {
+  def A: ApplicativeError[F, E]
+  def handler: E => F[Response[F]]
+  def handle(routes: HttpRoutes[F]): HttpRoutes[F] =
     Kleisli { req =>
       OptionT {
-        routes.run(req).value.handleErrorWith(e => handler(e).map(Option(_)))
+        A.handleErrorWith(routes.run(req).value)(e => A.map(handler(e))(Option(_)))
       }
     }
 }
 
 object HttpErrorHandler {
-  def apply[F[_], E <: Throwable](implicit ev: HttpErrorHandler[F, E]) = ev
+  @inline final def apply[F[_], E <: Throwable](implicit ev: HttpErrorHandler[F, E]) = ev
 }
 
 // -- instances
 
-class UserHttpErrorHandler[F[_]: MonadError[?[_], UserError]] extends HttpErrorHandler[F, UserError] with Http4sDsl[F] {
-  private val handler: UserError => F[Response[F]] = {
-    case InvalidUserAge(age)         => BadRequest(s"Invalid age $age".asJson)
-    case UserAlreadyExists(username) => Conflict(username.asJson)
-    case UserNotFound(username)      => NotFound(username.asJson)
-  }
+object UserHttpErrorHandler {
+  def apply[F[_]: MonadError[?[_], UserError]]: HttpErrorHandler[F, UserError] =
+    new RoutesHttpErrorHandler[F, UserError] {
+      val A = implicitly
 
-  override def handle(routes: HttpRoutes[F]): HttpRoutes[F] =
-    RoutesHttpErrorHandler(routes)(handler)
+      val handler: UserError => F[Response[F]] = {
+        case InvalidUserAge(age)         => BadRequest(s"Invalid age $age".asJson)
+        case UserAlreadyExists(username) => Conflict(username.asJson)
+        case UserNotFound(username)      => NotFound(username.asJson)
+      }
+    }
 }

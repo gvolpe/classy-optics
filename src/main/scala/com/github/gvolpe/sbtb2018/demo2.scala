@@ -10,10 +10,9 @@ import config._
 object demo2 extends IOApp {
 
   implicit val configReader: HasAppConfig[IO] =
-    new ApplicativeAsk[IO, AppConfig] {
+    new DefaultApplicativeAsk[IO, AppConfig] {
       override val applicative: Applicative[IO] = implicitly
       override def ask: IO[AppConfig]           = loadConfig[IO]
-      override def reader[A](f: AppConfig => A) = ask.map(f)
     }
 
   override def run(args: List[String]): IO[ExitCode] =
