@@ -1,7 +1,6 @@
 package com.github.gvolpe.scalar2019.tagless
 
 import cats.syntax.all._
-import com.github.gvolpe.scalar2019.rio._
 import com.olegpy.meow.hierarchy._
 import module._
 import scalaz.zio._
@@ -26,14 +25,14 @@ import scalaz.zio.interop.catz.mtl._
  * direct use of `Task` to construct our program.
  * */
 object rioapp extends App {
-  import instances.mtl._
+  import alt.Dependency, alt.instances.mtl._
 
-  // Natural transformation (~>) replaces `provide` in polymorphic code
+  val mkGraph: Task[Dependency[TaskR[AppModule[Task], ?], Task]] =
+    Dependency.make[TaskR, AppModule[Task]](Graph.make[Task]().map(_.appModule))
+
   def run(args: List[String]): UIO[Int] =
-    Graph
-      .make[Task]()
-      .flatMap { graph =>
-        implicit val fk = RIO.functionK(graph.appModule) // TaskR[AppModule[Task], ?] ~> Task
+    mkGraph
+      .flatMap { implicit dep =>
         Program.run[Task]
       }
       .as(0)
