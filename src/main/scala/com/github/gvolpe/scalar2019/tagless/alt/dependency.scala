@@ -19,7 +19,7 @@ object MkDep {
   implicit def taskMkDep[R]: MkDep[TaskR, R] =
     new MkDep[TaskR, R] {
       def apply[A]: TaskR[R, A] => R => Task[A] =
-        reader => dep => reader.provide(dep)
+        reader => env => reader.provide(env)
     }
 }
 
@@ -37,9 +37,9 @@ object Dependency {
   def make[F[- _, _], R](
       ga: F[Any, R]
   )(implicit f: Functor[F[Any, ?]], mk: MkDep[F, R]): F[Any, Dependency[F[R, ?], F[Any, ?]]] =
-    ga.map { dep =>
+    ga.map { env =>
       new Dependency[F[R, ?], F[Any, ?]] {
-        def apply[A](fa: F[R, A]): F[Any, A] = mk[A](fa)(dep)
+        def apply[A](fa: F[R, A]): F[Any, A] = mk[A](fa)(env)
       }
     }
 }
