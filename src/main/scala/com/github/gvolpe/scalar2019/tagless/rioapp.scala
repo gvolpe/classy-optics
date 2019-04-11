@@ -25,10 +25,12 @@ import scalaz.zio.interop.catz.mtl._
  * direct use of `Task` to construct our program.
  * */
 object rioapp extends App {
-  import alt.Dependency, alt.instances.mtl._
+  import alt._
+  import alt.instances.deps._
+  import alt.instances.mtl._
 
   val mkGraph: Task[Dependency[TaskR[AppModule[Task], ?], Task]] =
-    Dependency.make[TaskR, AppModule[Task]](Graph.make[Task]().map(_.appModule))
+    Dependency.make(Graph.make[Task]().map(_.appModule))
 
   def run(args: List[String]): UIO[Int] =
     mkGraph

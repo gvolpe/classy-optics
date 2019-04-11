@@ -1,5 +1,6 @@
 package com.github.gvolpe.scalar2019.tagless.alt
 
+import cats.arrow.FunctionK
 import laws._
 
 object laws {
@@ -10,25 +11,35 @@ object laws {
   }
 }
 
-trait MkDepLaws[F[- _, _], R] {
-  def M: MkDep[F, R]
+trait MkDepLaws[F[_], G[_], R] {
+  def M: MkDep[F, G, R]
 
   /*
-   * Feeding R to F[R, A] eliminates R ang gives you F[Any, A] which is just F[A]
+   * Feeding R to F[R, A] eliminates R and gives you F[Any, A] which is just F[A]
    */
-  def elimination[A](fra: F[R, A], env: R, fa: F[Any, A]) = M[A](fra)(env) <-> fa
+  def elimination[A](fa: F[A], env: R, ga: G[A]) = M[A](fa)(env) <-> ga
 
 }
 
 trait DependencyLaws {
 
   def identity[F[_], A](fa: F[A])(implicit ev: Dependency[F, F]) =
-    ev.apply(fa) <-> fa
+    FunctionK.id[F](fa) <-> ev(fa)
 
   def composition[F[_], G[_], H[_], A](fa: F[A], ga: G[A])(
       implicit ev1: Dependency[F, G],
       ev2: Dependency[G, H]
   ) =
     ev2(ev1(fa)) <-> ev2(ga)
+
+  def associativity[F[_], G[_], H[_], A](fa: F[A], ga: G[A], ha: H[A])(
+      implicit ev1: Dependency[F, G],
+      ev2: Dependency[G, H],
+      ev3: Dependency[H, F]
+  ) = {
+    val f1 = (ev3[A] _) compose ((ev2[A] _) compose (ev1[A] _))
+    val f2 = ((ev3[A] _) compose (ev2[A] _)) compose (ev1[A] _)
+    f1(fa) <-> f2(fa)
+  }
 
 }
