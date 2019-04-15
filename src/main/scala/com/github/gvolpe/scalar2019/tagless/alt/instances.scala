@@ -24,22 +24,22 @@ private[tagless] abstract class AltDeriveMtlInstances {
 
 }
 
-private[tagless] abstract class DependencyInstances extends BiMkDepInstances with TransMkDepInstances
+private[tagless] abstract class DependencyInstances extends BiReaderInstances with TransReaderInstances
 
-private[tagless] trait BiMkDepInstances {
+private[tagless] trait BiReaderInstances {
 
-  implicit def taskBiMkDep[R]: BiMkDep[TaskR, R] =
-    new BiMkDep[TaskR, R] {
+  implicit def taskBiMkDep[R]: BiReader[TaskR, R] =
+    new BiReader[TaskR, R] {
       def apply[A]: TaskR[R, A] => R => Task[A] =
         reader => env => reader.provide(env)
     }
 
 }
 
-private[tagless] trait TransMkDepInstances {
+private[tagless] trait TransReaderInstances {
 
-  implicit def kleisliIOTransMkDep[R]: TransMkDep[Kleisli, CatsIO, R] =
-    new TransMkDep[Kleisli, CatsIO, R] {
+  implicit def kleisliIOTransMkDep[R]: TransReader[Kleisli, CatsIO, R] =
+    new TransReader[Kleisli, CatsIO, R] {
       def apply[A]: Kleisli[CatsIO, R, A] => R => CatsIO[A] =
         reader => env => reader.run(env)
     }

@@ -11,14 +11,10 @@ object laws {
   }
 }
 
-trait MkDepLaws[F[_], G[_], R] {
-  def M: MkDep[F, G, R]
+trait GenReaderLaws[F[_], G[_], R] {
+  def M: GenReader[F, G, R]
 
-  /*
-   * Feeding R to F[R, A] eliminates R and gives you F[Any, A] which is just F[A]
-   */
   def elimination[A](fa: F[A], env: R, ga: G[A]) = M[A](fa)(env) <-> ga
-
 }
 
 trait DependencyLaws {
