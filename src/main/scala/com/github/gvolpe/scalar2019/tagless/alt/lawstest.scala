@@ -60,19 +60,11 @@ trait EqInstances {
 }
 
 object KleisliGenReaderLaws {
-  def apply[F[_], R](implicit ev: TransReader[Kleisli, F, R]): GenReaderLaws[Kleisli[F, R, ?], F, R] =
-    new GenReaderLaws[Kleisli[F, R, ?], F, R] {
-      val M = new GenReader[Kleisli[F, R, ?], F, R] {
-        def apply[A]: Kleisli[F, R, A] => R => F[A] = ev.apply
-      }
-    }
+  def apply[F[_], R](implicit ev: GenReader[Kleisli[F, R, ?], F, R]): GenReaderLaws[Kleisli[F, R, ?], F, R] =
+    new GenReaderLaws[Kleisli[F, R, ?], F, R] { val M = ev }
 }
 
 object TaskRGenReaderLaws {
-  def apply[R](implicit ev: BiReader[TaskR, R]): GenReaderLaws[TaskR[R, ?], Task, R] =
-    new GenReaderLaws[TaskR[R, ?], Task, R] {
-      val M = new GenReader[TaskR[R, ?], Task, R] {
-        def apply[A]: TaskR[R, A] => R => Task[A] = ev.apply
-      }
-    }
+  def apply[R](implicit ev: GenReader[TaskR[R, ?], Task, R]): GenReaderLaws[TaskR[R, ?], Task, R] =
+    new GenReaderLaws[TaskR[R, ?], Task, R] { val M = ev }
 }
