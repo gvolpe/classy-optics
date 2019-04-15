@@ -4,8 +4,8 @@ import cats.Functor
 import cats.implicits._
 
 /*
- * Generalized Reader for any `F[_]` that can eliminate the environment `R`
- * and in effect produce a `G[_]`.
+ * Generalized Reader for any `F[_]` that can eliminate the environment `R` and
+ * in effect produce a `G[_]`.
  *
  * It abstracts over `provide` and `run`, for `ZIO` and `Kleisli`, respectively.
  *

@@ -2,7 +2,6 @@ package com.github.gvolpe.scalar2019.tagless.alt
 
 import cats._
 import cats.data.Kleisli
-import cats.effect.{ IO => CatsIO }
 import cats.mtl._
 import scalaz.zio.{ Task, TaskR }
 
@@ -38,9 +37,9 @@ private[tagless] trait BiReaderInstances {
 
 private[tagless] trait TransReaderInstances {
 
-  implicit def kleisliIOTransMkDep[R]: TransReader[Kleisli, CatsIO, R] =
-    new TransReader[Kleisli, CatsIO, R] {
-      def apply[A]: Kleisli[CatsIO, R, A] => R => CatsIO[A] =
+  implicit def kleisliTransMkDep[F[_], R]: TransReader[Kleisli, F, R] =
+    new TransReader[Kleisli, F, R] {
+      def apply[A]: Kleisli[F, R, A] => R => F[A] =
         reader => env => reader.run(env)
     }
 
