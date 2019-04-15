@@ -27,7 +27,7 @@ private[tagless] abstract class DependencyInstances extends BiReaderInstances wi
 
 private[tagless] trait BiReaderInstances {
 
-  implicit def taskBiMkDep[R]: BiReader[TaskR, R] =
+  implicit def taskGenReader[R]: BiReader[TaskR, R] =
     new BiReader[TaskR, R] {
       def apply[A]: TaskR[R, A] => R => Task[A] =
         reader => env => reader.provide(env)
@@ -37,7 +37,7 @@ private[tagless] trait BiReaderInstances {
 
 private[tagless] trait TransReaderInstances {
 
-  implicit def kleisliTransMkDep[F[_], R]: TransReader[Kleisli, F, R] =
+  implicit def kleisliGenReader[F[_], R]: TransReader[Kleisli, F, R] =
     new TransReader[Kleisli, F, R] {
       def apply[A]: Kleisli[F, R, A] => R => F[A] =
         reader => env => reader.run(env)
