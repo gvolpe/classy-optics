@@ -15,7 +15,8 @@ import cats.implicits._
  * - `TaskR[R, A] => R => Task[A]`
  */
 abstract class GenReader[F[_], G[_], R] {
-  def apply[A]: F[A] => R => G[A]
+  def runReader[A](fa: F[A])(env: R): G[A]
+  def unread[A](ga: G[A]): F[A]
 }
 
 object GenReader {
@@ -58,10 +59,10 @@ object Dependency {
    */
   def make[F[_], G[_]: Functor, R](
       ga: G[R]
-  )(implicit reader: GenReader[F, G, R]): G[Dependency[F, G]] =
+  )(implicit ev: GenReader[F, G, R]): G[Dependency[F, G]] =
     ga.map { env =>
       new Dependency[F, G] {
-        def apply[A](fa: F[A]): G[A] = reader[A](fa)(env)
+        def apply[A](fa: F[A]): G[A] = ev.runReader[A](fa)(env)
       }
     }
 

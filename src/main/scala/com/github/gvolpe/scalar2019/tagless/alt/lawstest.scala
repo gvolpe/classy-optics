@@ -23,8 +23,11 @@ object lawstest extends App with CheckLaws with EqInstances {
   val fa3: TaskR[String, Int]       = ZIO.accessM(_ => ga3)
 
   check(KleisliGenReaderLaws[Id, String].elimination(fa1, env, ga1))
+  check(KleisliGenReaderLaws[Id, String].idempotency(fa1, env, ga1))
   check(KleisliGenReaderLaws[IO, String].elimination(fa2, env, ga2))
+  check(KleisliGenReaderLaws[IO, String].idempotency(fa2, env, ga2))
   check(TaskRGenReaderLaws[String].elimination(fa3, env, ga3))
+  check(TaskRGenReaderLaws[String].idempotency(fa3, env, ga3))
 
   println("✔️  All tests have passed! (•̀ᴗ•́)و ̑̑")
 

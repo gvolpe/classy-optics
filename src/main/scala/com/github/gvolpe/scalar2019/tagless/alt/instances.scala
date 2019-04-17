@@ -29,8 +29,8 @@ private[tagless] trait BiReaderInstances {
 
   implicit def taskGenReader[R]: BiReader[TaskR, R] =
     new BiReader[TaskR, R] {
-      def apply[A]: TaskR[R, A] => R => Task[A] =
-        reader => env => reader.provide(env)
+      def runReader[A](fa: TaskR[R, A])(env: R): Task[A] = fa.provide(env)
+      def unread[A](fa: Task[A]): TaskR[R, A]            = fa
     }
 
 }
@@ -39,8 +39,8 @@ private[tagless] trait TransReaderInstances {
 
   implicit def kleisliGenReader[F[_], R]: TransReader[Kleisli, F, R] =
     new TransReader[Kleisli, F, R] {
-      def apply[A]: Kleisli[F, R, A] => R => F[A] =
-        reader => env => reader.run(env)
+      def runReader[A](fa: Kleisli[F, R, A])(env: R): F[A] = fa.run(env)
+      def unread[A](fa: F[A]): Kleisli[F, R, A]            = Kleisli(_ => fa)
     }
 
 }

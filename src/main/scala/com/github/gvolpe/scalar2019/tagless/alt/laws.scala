@@ -1,5 +1,6 @@
 package com.github.gvolpe.scalar2019.tagless.alt
 
+import cats.Functor
 import cats.arrow.FunctionK
 import laws._
 
@@ -14,12 +15,16 @@ object laws {
 trait GenReaderLaws[F[_], G[_], R] {
   def M: GenReader[F, G, R]
 
-  def elimination[A](fa: F[A], env: R, ga: G[A]) = M[A](fa)(env) <-> ga
+  def elimination[A](fa: F[A], env: R, ga: G[A]) =
+    M.runReader(fa)(env) <-> ga
+
+  def idempotency[A](fa: F[A], env: R, ga: G[A]) =
+    M.runReader(M.unread(M.runReader(fa)(env)))(env) <-> M.runReader(fa)(env)
 }
 
 trait DependencyLaws {
 
-  def identity[F[_], A](fa: F[A])(implicit ev: Dependency[F, F]) =
+  def identity[F[_]: Functor, A](fa: F[A])(implicit ev: Dependency[F, F]) =
     FunctionK.id[F](fa) <-> ev(fa)
 
   def composition[F[_], G[_], H[_], A](fa: F[A], ga: G[A])(
