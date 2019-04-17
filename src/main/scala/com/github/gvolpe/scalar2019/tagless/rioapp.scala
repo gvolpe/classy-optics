@@ -18,9 +18,19 @@ import scalaz.zio.interop.catz.mtl._
  * But if we look at the concrete type `TaskR[R, A]`, in order to get a runnable
  * `Task[A]` all we need to do is call `provide(r)` with the environmental R.
  *
- * This relationship can be represented using natural transformation `F ~> G`.
+ * This relationship can be represented as a `Dependency[F, G]` which can be seen as
+ * a especialized case of natural transformation with different laws.
  *
- * So given instances of `ApplicativeAsk[TaskR[R, ?], R]` and `TaskR[R, ?] ~> Task`
+ * We can only create a `Dependency` by introducing a generalized reader typeclass
+ * that abstracts over `provide`: `GenReader[F, G, R]`. For example, an instance:
+ *
+ * - `GenReader[TaskR[R, ?], Task, R]`
+ *
+ * So given instances of
+ *
+ * - `ApplicativeAsk[TaskR[R, ?], R]` and
+ * - `Dependency[TaskR[R, ?], Task]`
+ *
  * we can automatically derive an instance of `ApplicativeAsk[Task, R]` and make
  * direct use of `Task` to construct our program.
  * */
@@ -39,21 +49,5 @@ object rioapp extends App {
       }
       .as(0)
       .orDie
-
-  /*
- * We could build the `ApplicativeAsk` instance manually as we do with `cats.effect.IO` but
- * it feels more hacky than having a clear relationship represented with `F ~> G`.
- *
- *import module.instances._
- *def run(args: List[String]): UIO[Int] =
- *  Graph
- *    .make[Task]()
- *    .map(g => mkModuleReader(g.appModule))
- *    .flatMap { implicit ev: HasAppModule[Task] =>
- *      Program.run[Task]
- *    }
- *    .as(0)
- *    .orDie
- */
 
 }

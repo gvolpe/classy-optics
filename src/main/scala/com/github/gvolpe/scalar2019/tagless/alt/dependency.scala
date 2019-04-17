@@ -4,8 +4,8 @@ import cats.Functor
 import cats.implicits._
 
 /*
- * Generalized Reader for any `F[_]` that can eliminate the environment `R` and
- * in effect produce a `G[_]`.
+ * Generalized Reader typeclass for any `F[_]` that can eliminate the environment
+ * `R` and in effect produce a `G[_]`.
  *
  * It abstracts over `provide` and `run`, for `ZIO` and `Kleisli`, respectively.
  *
@@ -42,10 +42,11 @@ object TransReader {
 }
 
 /*
- * Typeclass that defines a relationship between dependencies. It can be
- * seen as a natural transformation (~>) with different laws.
+ * Interface (not a typeclass) that defines a relationship between dependencies.
+ * It can be seen as a natural transformation (~>) with different laws.
  *
- * It can normally be created by requiring a lawful `GenReader[F, G, R]`
+ * It can normally be created by requiring a lawful `GenReader[F, G, R]` if the
+ * only way to obtain `R` is via an effectful operation.
  */
 abstract class Dependency[F[_], G[_]] {
   def apply[A](fa: F[A]): G[A]
