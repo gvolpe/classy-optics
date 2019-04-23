@@ -39,8 +39,10 @@ object rioapp extends App {
   import alt.instances.deps._
   import alt.instances.mtl._
 
-  val mkGraph: Task[Dependency[TaskR[AppModule[Task], ?], Task]] =
-    Dependency.make(Graph.make[Task]().map(_.appModule))
+  type Dep[F[_[_]]] = Dependency[TaskR[F[Task], ?], Task]
+
+  val mkGraph: Task[Dep[AppModule]] =
+    Dependency.make(Graph.make[Task].map(_.appModule))
 
   def run(args: List[String]): UIO[Int] =
     mkGraph

@@ -38,7 +38,10 @@ object module {
   }
 
   object Graph {
-    def make[F[_]: Sync](deps: Rewritable[F] = Rewritable.empty[F]): F[Graph[F]] =
+    def make[F[_]: Sync]: F[Graph[F]] =
+      makeForTest[F](Rewritable.empty[F])
+
+    def makeForTest[F[_]: Sync](deps: Rewritable[F]): F[Graph[F]] =
       new Graph[F](deps).pure[F] // This is normally an effectful operation
   }
 
