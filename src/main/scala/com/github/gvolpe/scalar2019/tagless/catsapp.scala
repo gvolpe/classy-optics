@@ -24,7 +24,7 @@ object catsapp extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] =
     Graph
-      .make[IO]()
+      .make[IO]
       .map(g => mkModuleReader(g.appModule))
       .flatMap { implicit m: HasAppModule[IO] =>
         Program.run[IO].as(ExitCode.Success)
